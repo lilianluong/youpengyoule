@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Scoreboard from "@/components/Scoreboard";
 import DeckRequirements from "@/components/DeckRequirements";
+import RoundHistory from "@/components/RoundHistory";
 
 interface Player {
   user_id: string;
@@ -31,12 +32,14 @@ export default function GameDetailPage() {
   const gameId = params.gameId as string;
 
   const [game, setGame] = useState<Game | null>(null);
+  const [rounds, setRounds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showKingModal, setShowKingModal] = useState(false);
   const [selectingKing, setSelectingKing] = useState(false);
 
   useEffect(() => {
     fetchGame();
+    fetchRounds();
   }, [gameId]);
 
   const fetchGame = async () => {
@@ -48,6 +51,16 @@ export default function GameDetailPage() {
       console.error("Failed to fetch game:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRounds = async () => {
+    try {
+      const response = await fetch(`/api/games/${gameId}/rounds`);
+      const data = await response.json();
+      setRounds(data.rounds || []);
+    } catch (error) {
+      console.error("Failed to fetch rounds:", error);
     }
   };
 
@@ -185,6 +198,11 @@ export default function GameDetailPage() {
             </button>
           </div>
         )}
+
+        {/* Round History */}
+        <div className="mt-8" style={{ animation: "fadeInUp 0.5s ease-out 0.3s", opacity: 0 }}>
+          <RoundHistory rounds={rounds} playerCount={game.game_players.length} />
+        </div>
       </main>
 
       {/* King Selection Modal */}
