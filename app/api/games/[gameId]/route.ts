@@ -28,6 +28,7 @@ export async function GET(
     .single();
 
   if (gameError || !game) {
+    console.error("Game fetch error:", gameError, "GameId:", gameId);
     return NextResponse.json({ error: "Game not found" }, { status: 404 });
   }
 

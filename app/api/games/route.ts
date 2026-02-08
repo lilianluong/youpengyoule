@@ -39,6 +39,8 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { name, playerIds } = body;
 
+  console.log("Creating game with:", { name, playerIds, userId: user.id });
+
   if (!name || !playerIds || !Array.isArray(playerIds) || playerIds.length < 5 || playerIds.length > 12) {
     return NextResponse.json(
       { error: "Invalid request. Name and 5-12 playerIds required." },
@@ -53,6 +55,7 @@ export async function POST(request: Request) {
     .in("user_id", playerIds);
 
   if (profilesError || !profiles || profiles.length !== playerIds.length) {
+    console.error("Profile validation error:", profilesError, "Found:", profiles?.length, "Expected:", playerIds.length);
     return NextResponse.json({ error: "Invalid player IDs" }, { status: 400 });
   }
 
@@ -67,6 +70,7 @@ export async function POST(request: Request) {
     .single();
 
   if (gameError || !game) {
+    console.error("Game creation error:", gameError);
     return NextResponse.json({ error: gameError?.message || "Failed to create game" }, { status: 500 });
   }
 
@@ -82,6 +86,7 @@ export async function POST(request: Request) {
     .insert(gamePlayers);
 
   if (playersError) {
+    console.error("Game players creation error:", playersError);
     // Rollback: delete the game.
     await supabase.from("games").delete().eq("id", game.id);
     return NextResponse.json({ error: playersError.message }, { status: 500 });

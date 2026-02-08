@@ -87,11 +87,13 @@ export async function POST(
   }
 
   // Calculate round result.
-  const result = calculateRoundResult(townPoints, deckConfig.decks);
+  const result = calculateRoundResult(townPoints, deckConfig.decks, kingsSidePlayerIds.length, playerCount);
 
   // Determine winners and losers.
-  const winnerIds = result.kingsSideWon ? kingsSidePlayerIds : game.game_players.filter(p => !kingsSidePlayerIds.includes(p.user_id)).map(p => p.user_id);
-  const loserIds = result.kingsSideWon ? game.game_players.filter(p => !kingsSidePlayerIds.includes(p.user_id)).map(p => p.user_id) : kingsSidePlayerIds;
+  // On tie, Town is considered "winner" for next king selection purposes
+  const townPlayerIds = game.game_players.filter(p => !kingsSidePlayerIds.includes(p.user_id)).map(p => p.user_id);
+  const winnerIds = result.isTie ? townPlayerIds : (result.kingsSideWon ? kingsSidePlayerIds : townPlayerIds);
+  const loserIds = result.kingsSideWon ? townPlayerIds : kingsSidePlayerIds;
 
   // Get next round number.
   const { data: lastRound } = await supabase
@@ -138,18 +140,20 @@ export async function POST(
     return NextResponse.json({ error: kingsSideError.message }, { status: 500 });
   }
 
-  // Update player levels.
-  for (const player of game.game_players) {
-    if (winnerIds.includes(player.user_id)) {
-      const advancement = advanceLevel(player.current_level, result.levelChange);
+  // Update player levels (only if not a tie).
+  if (!result.isTie && result.levelChange > 0) {
+    for (const player of game.game_players) {
+      if (winnerIds.includes(player.user_id)) {
+        const advancement = advanceLevel(player.current_level, result.levelChange);
 
-      await supabase
-        .from("game_players")
-        .update({
-          current_level: advancement.newLevel,
-          graduation_count: player.graduation_count + (advancement.graduated ? 1 : 0),
-        })
-        .eq("id", player.id);
+        await supabase
+          .from("game_players")
+          .update({
+            current_level: advancement.newLevel,
+            graduation_count: player.graduation_count + (advancement.graduated ? 1 : 0),
+          })
+          .eq("id", player.id);
+      }
     }
   }
 
