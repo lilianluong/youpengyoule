@@ -91,7 +91,7 @@ export async function POST(
 
   // Determine winners and losers.
   // On tie, Town is considered "winner" for next king selection purposes
-  const townPlayerIds = game.game_players.filter(p => !kingsSidePlayerIds.includes(p.user_id)).map(p => p.user_id);
+  const townPlayerIds = game.game_players.filter((p: any) => !kingsSidePlayerIds.includes(p.user_id)).map((p: any) => p.user_id);
   const winnerIds = result.isTie ? townPlayerIds : (result.kingsSideWon ? kingsSidePlayerIds : townPlayerIds);
   const loserIds = result.kingsSideWon ? townPlayerIds : kingsSidePlayerIds;
 
