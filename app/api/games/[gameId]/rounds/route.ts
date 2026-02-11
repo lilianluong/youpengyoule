@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { calculateRoundResult, advanceLevel, getNextKing, DECK_CONFIG } from "@/lib/game-logic";
 
+interface GamePlayer {
+  id: string;
+  user_id: string;
+  seat_position: number;
+  current_level: number;
+  graduation_count: number;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ gameId: string }> }
@@ -91,7 +99,7 @@ export async function POST(
 
   // Determine winners and losers.
   // On tie, Town is considered "winner" for next king selection purposes
-  const townPlayerIds = game.game_players.filter((p: any) => !kingsSidePlayerIds.includes(p.user_id)).map((p: any) => p.user_id);
+  const townPlayerIds = (game.game_players as GamePlayer[]).filter((p) => !kingsSidePlayerIds.includes(p.user_id)).map((p) => p.user_id);
   const winnerIds = result.isTie ? townPlayerIds : (result.kingsSideWon ? kingsSidePlayerIds : townPlayerIds);
   const loserIds = result.kingsSideWon ? townPlayerIds : kingsSidePlayerIds;
 
@@ -158,7 +166,7 @@ export async function POST(
   }
 
   // Determine next king.
-  const currentKing = game.game_players.find(p => p.user_id === game.current_king_user_id);
+  const currentKing = (game.game_players as GamePlayer[]).find((p) => p.user_id === game.current_king_user_id);
   if (currentKing) {
     const nextKing = getNextKing(game.game_players, currentKing.seat_position, winnerIds);
 

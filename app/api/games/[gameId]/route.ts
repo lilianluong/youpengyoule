@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+interface GamePlayer {
+  seat_position: number;
+  [key: string]: any;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ gameId: string }> }
@@ -33,7 +38,7 @@ export async function GET(
   }
 
   // Sort players by seat position.
-  game.game_players.sort((a, b) => a.seat_position - b.seat_position);
+  (game.game_players as GamePlayer[]).sort((a, b) => a.seat_position - b.seat_position);
 
   return NextResponse.json({ game });
 }

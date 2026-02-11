@@ -52,7 +52,8 @@ export default function RoundHistory({ rounds, playerCount }: RoundHistoryProps)
 
       <div className="divide-y-2 divide-[#FFF8F0]">
         {rounds.map((round) => {
-          const result = calculateRoundResult(round.town_points, deckConfig.decks);
+          const kingsSideCount = round.round_kings_side.length;
+          const result = calculateRoundResult(round.town_points, deckConfig.decks, kingsSideCount, playerCount);
           const kingsSideNames = round.round_kings_side.map(
             (p) => p.user_profiles.display_name
           );
