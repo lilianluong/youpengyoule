@@ -219,7 +219,8 @@ export default function RoundEntryPage() {
                     </div>
                   </div>
                 </label>
-              ))}
+                );
+              })}
             </div>
           </div>
 
