@@ -57,7 +57,7 @@ export default function GamesPage() {
             </h1>
             <p className="text-[#C67B5C] mt-1 text-sm tracking-wide">找朋友 SCORE TRACKER</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             <Link
               href="/profile"
               className="px-4 py-2 text-sm text-[#8B4513] hover:text-[#C67B5C] transition-colors"
