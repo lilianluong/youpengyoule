@@ -18,17 +18,30 @@ export async function GET(request: Request) {
         .eq("user_id", data.user.id)
         .single();
 
+      // Get user metadata from OAuth provider (Google).
+      const displayName = data.user.user_metadata?.full_name ||
+                         data.user.user_metadata?.name ||
+                         data.user.email?.split("@")[0] ||
+                         "User";
+      const avatarUrl = data.user.user_metadata?.avatar_url ||
+                       data.user.user_metadata?.picture ||
+                       null;
+
       // Create profile if it doesn't exist.
       if (!profile) {
         await supabase.from("user_profiles").insert({
           user_id: data.user.id,
-          display_name: data.user.email?.split("@")[0] || "User",
+          display_name: displayName,
           email: data.user.email || "",
-          profile_completed: false,
+          profile_picture_url: avatarUrl,
+          profile_completed: avatarUrl ? true : false, // Auto-complete if Google provided avatar
         });
 
-        // Redirect to profile page for first-time setup.
-        return NextResponse.redirect(`${origin}/profile`);
+        // Redirect to profile page if no avatar, otherwise to games.
+        if (!avatarUrl) {
+          return NextResponse.redirect(`${origin}/profile`);
+        }
+        return NextResponse.redirect(`${origin}/games`);
       }
 
       // Redirect to profile page if not completed, otherwise to games.
