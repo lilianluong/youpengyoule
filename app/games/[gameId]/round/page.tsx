@@ -11,6 +11,7 @@ interface Player {
   current_level: number;
   user_profiles: {
     display_name: string;
+    profile_picture_url?: string | null;
   };
 }
 
@@ -160,8 +161,23 @@ export default function RoundEntryPage() {
             </div>
             <div className="bg-[#FFF8F0] rounded-lg p-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#C67B5C] text-white flex items-center justify-center font-bold">
-                  {king?.seat_position}
+                <div className="relative w-12 h-12">
+                  {king?.user_profiles.profile_picture_url ? (
+                    <img
+                      src={king.user_profiles.profile_picture_url}
+                      alt={king.user_profiles.display_name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-[#C67B5C]"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C67B5C] to-[#8B4513] flex items-center justify-center border-2 border-[#C67B5C]">
+                      <span className="text-white text-lg font-bold">
+                        {king?.user_profiles.display_name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#8B4513] text-white flex items-center justify-center text-xs font-bold border-2 border-white">
+                    {king?.seat_position}
+                  </div>
                 </div>
                 <div className="font-semibold text-[#8B4513] text-lg">
                   {king?.user_profiles.display_name}
@@ -211,13 +227,28 @@ export default function RoundEntryPage() {
                         onChange={() => togglePartner(player.user_id)}
                         className="w-5 h-5 text-[#C67B5C] rounded focus:ring-[#8B4513] disabled:opacity-50 disabled:cursor-not-allowed"
                       />
-                    <div className="w-12 h-12 rounded-full bg-[#C67B5C] text-white flex items-center justify-center font-bold">
-                      {player.seat_position}
+                      <div className="relative w-12 h-12">
+                        {player.user_profiles.profile_picture_url ? (
+                          <img
+                            src={player.user_profiles.profile_picture_url}
+                            alt={player.user_profiles.display_name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-[#C67B5C]"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C67B5C] to-[#8B4513] flex items-center justify-center border-2 border-[#C67B5C]">
+                            <span className="text-white text-lg font-bold">
+                              {player.user_profiles.display_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#8B4513] text-white flex items-center justify-center text-xs font-bold border-2 border-white">
+                          {player.seat_position}
+                        </div>
+                      </div>
+                      <div className="font-semibold text-[#8B4513]">
+                        {player.user_profiles.display_name}
+                      </div>
                     </div>
-                    <div className="font-semibold text-[#8B4513]">
-                      {player.user_profiles.display_name}
-                    </div>
-                  </div>
                 </label>
                 );
               })}

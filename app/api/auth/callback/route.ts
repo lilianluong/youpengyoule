@@ -14,7 +14,7 @@ export async function GET(request: Request) {
       // Check if user_profiles entry exists.
       const { data: profile } = await supabase
         .from("user_profiles")
-        .select("user_id")
+        .select("user_id, profile_completed")
         .eq("user_id", data.user.id)
         .single();
 
@@ -24,10 +24,18 @@ export async function GET(request: Request) {
           user_id: data.user.id,
           display_name: data.user.email?.split("@")[0] || "User",
           email: data.user.email || "",
+          profile_completed: false,
         });
+
+        // Redirect to profile page for first-time setup.
+        return NextResponse.redirect(`${origin}/profile`);
       }
 
-      // Redirect to games page.
+      // Redirect to profile page if not completed, otherwise to games.
+      if (!profile.profile_completed) {
+        return NextResponse.redirect(`${origin}/profile`);
+      }
+
       return NextResponse.redirect(`${origin}/games`);
     }
   }

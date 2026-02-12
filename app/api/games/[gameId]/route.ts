@@ -26,7 +26,7 @@ export async function GET(
       *,
       game_players (
         *,
-        user_profiles (display_name, email)
+        user_profiles (display_name, email, profile_picture_url)
       )
     `)
     .eq("id", gameId)
