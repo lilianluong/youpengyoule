@@ -8,6 +8,7 @@ interface GamePlayer {
   seat_position: number;
   current_level: number;
   graduation_count: number;
+  is_active: boolean;
 }
 
 export async function GET(
@@ -87,19 +88,22 @@ export async function POST(
     kingsSidePlayerIds.push(game.current_king_user_id);
   }
 
-  const playerCount = game.game_players.length;
+  // Only count active players for scoring thresholds and team size limits.
+  const activePlayers = (game.game_players as GamePlayer[]).filter((p) => p.is_active !== false);
+  const playerCount = activePlayers.length;
   const deckConfig = DECK_CONFIG[playerCount];
 
   if (!deckConfig) {
-    return NextResponse.json({ error: "Invalid player count" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid active player count" }, { status: 400 });
   }
 
   // Calculate round result.
   const result = calculateRoundResult(townPoints, deckConfig.decks, kingsSidePlayerIds.length, playerCount);
 
   // Determine winners and losers.
-  // On tie, Town is considered "winner" for next king selection purposes
-  const townPlayerIds = (game.game_players as GamePlayer[]).filter((p) => !kingsSidePlayerIds.includes(p.user_id)).map((p) => p.user_id);
+  // Only active players who are not on King's Side are on Town.
+  // On tie, Town is considered "winner" for next king selection purposes.
+  const townPlayerIds = activePlayers.filter((p) => !kingsSidePlayerIds.includes(p.user_id)).map((p) => p.user_id);
   const winnerIds = result.isTie ? townPlayerIds : (result.kingsSideWon ? kingsSidePlayerIds : townPlayerIds);
   const loserIds = result.kingsSideWon ? townPlayerIds : kingsSidePlayerIds;
 
@@ -166,6 +170,8 @@ export async function POST(
   }
 
   // Determine next king.
+  // Pass all players (including inactive) so seat position traversal wraps correctly.
+  // Inactive players are not in winnerIds, so they are naturally skipped.
   const currentKing = (game.game_players as GamePlayer[]).find((p) => p.user_id === game.current_king_user_id);
   if (currentKing) {
     const nextKing = getNextKing(game.game_players, currentKing.seat_position, winnerIds);

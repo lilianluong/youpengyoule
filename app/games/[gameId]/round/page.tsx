@@ -9,6 +9,7 @@ interface Player {
   user_id: string;
   seat_position: number;
   current_level: number;
+  is_active?: boolean;
   user_profiles: {
     display_name: string;
     profile_picture_url?: string | null;
@@ -55,8 +56,9 @@ export default function RoundEntryPage() {
       if (prev.includes(userId)) {
         return prev.filter(id => id !== userId);
       }
-      // Check if we've reached max team size (King + Friends)
-      const maxTeamSize = game ? getMaxTeamSize(game.game_players.length) : 3;
+      // Check if we've reached max team size (King + Friends), based on active player count.
+      const activePlayers = game ? game.game_players.filter(p => p.is_active !== false) : [];
+      const maxTeamSize = getMaxTeamSize(activePlayers.length || 1);
       const maxFriends = maxTeamSize - 1; // Subtract 1 for the King
       if (prev.length >= maxFriends) {
         return prev; // Don't add more
@@ -113,15 +115,18 @@ export default function RoundEntryPage() {
     return null;
   }
 
+  const activePlayers = game.game_players.filter(p => p.is_active !== false);
   const king = game.game_players.find(p => p.user_id === game.current_king_user_id);
-  const otherPlayers = game.game_players.filter(p => p.user_id !== game.current_king_user_id);
+  // Only active non-king players can be chosen as partners.
+  const otherPlayers = activePlayers.filter(p => p.user_id !== game.current_king_user_id);
 
-  const deckConfig = DECK_CONFIG[game.game_players.length];
+  const deckConfig = DECK_CONFIG[activePlayers.length];
   const townPointsNum = parseInt(townPoints) || 0;
   const kingsSideIds = [game.current_king_user_id, ...selectedPartners];
-  const preview = townPoints ? calculateRoundResult(townPointsNum, deckConfig.decks, kingsSideIds.length, game.game_players.length) : null;
-  const townIds = game.game_players.filter(p => !kingsSideIds.includes(p.user_id)).map(p => p.user_id);
-  const maxTeamSize = getMaxTeamSize(game.game_players.length);
+  const preview = townPoints ? calculateRoundResult(townPointsNum, deckConfig.decks, kingsSideIds.length, activePlayers.length) : null;
+  // Town = active players not on king's side.
+  const townIds = activePlayers.filter(p => !kingsSideIds.includes(p.user_id)).map(p => p.user_id);
+  const maxTeamSize = getMaxTeamSize(activePlayers.length);
   const maxFriends = maxTeamSize - 1;
 
   return (

@@ -103,6 +103,7 @@ export interface Player {
   user_id: string;
   seat_position: number;
   current_level: number;
+  is_active?: boolean;
 }
 
 /**

@@ -25,6 +25,7 @@ CREATE TABLE game_players (
   seat_position INTEGER NOT NULL CHECK (seat_position >= 0), -- 0-indexed counter-clockwise.
   current_level INTEGER NOT NULL DEFAULT 2 CHECK (current_level >= 2 AND current_level <= 14), -- 2-14 (14=A).
   graduation_count INTEGER NOT NULL DEFAULT 0 CHECK (graduation_count >= 0),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE, -- FALSE = paused (skipped for kingship, not counted in player count).
   UNIQUE(game_id, user_id),
   UNIQUE(game_id, seat_position)
 );
@@ -119,14 +120,14 @@ CREATE POLICY "Participants can read players in their games"
     )
   );
 
--- Users can insert game_players when creating a game.
+-- Participants can insert game_players into their games (for mid-game player adds).
 CREATE POLICY "Users can insert game_players"
   ON game_players FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM games
-      WHERE games.id = game_players.game_id
-        AND games.created_by = auth.uid()
+      SELECT 1 FROM game_players gp
+      WHERE gp.game_id = game_players.game_id
+        AND gp.user_id = auth.uid()
     )
   );
 
